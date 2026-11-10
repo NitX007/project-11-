@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,
+initial-scale=1.0">
+<title>Login and Registration System</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Google Fonts: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;
+600;700&display=swap" rel="stylesheet">
+<!-- Font Awesome Icons -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/al
+l.min.css">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+fontFamily: {
+sans: ['Inter', 'sans-serif'],
+},
+colors: {
+brand: {
+50: '#eef2ff',
+100: '#e0e7ff',
+500: '#6366f1',
+600: '#4f46e5',
+700: '#4338ca',
+}
+}
+}
+}
+}
+</script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background: radial-gradient(circle at top left, #fff7ed,
+#ffedd5, #fef3c7);
+min-height: 100vh;
+} .glass-card {
+background: rgba(255, 255, 255, 0.88);
+backdrop-filter: blur(16px);
+-webkit-backdrop-filter: blur(16px);
+border: 1px solid rgba(251, 146, 60, 0.22);
+box-shadow: 0 20px 45px -10px rgba(234, 88, 12, 0.12), 0 8px
+16px -6px rgba(0, 0, 0, 0.05);
+}
+.glass-input {
+background: #ffffff;
+border: 1px solid #fed7aa;
+color: #1e293b;
+transition: all 0.2s ease;
+}
+.glass-input:focus {
+outline: none;
+border-color: #f97316;
+box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.22);
+background: #ffffff;
+}
+/* Smooth tab fade */
+.fade-enter {
+animation: fadeIn 0.35s ease-in-out forwards;
+}
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(8px); }
+to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between min-h-screen
+antialiased selection:bg-orange-500 selection:text-white">
+<!-- Header / Navigation Bar -->
+<header class="w-full border-b border-orange-200/60 bg-white/70
+backdrop-blur-md sticky top-0 z-40 shadow-sm">
+<div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center
+justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr
+from-orange-500 to-amber-500 flex items-center justify-center
+shadow-lg shadow-orange-500/25">
+<i class="fa-solid fa-shield-halved text-white text-lg"></i>
+</div>
+<div>
+<span class="font-bold text-lg tracking-tight text-slate-900
+block leading-tight">SecureAuth</span>
+<span class="text-xs text-orange-600 font-medium">Login & Registration Portal</span>
+</div>
+</div>
+<!-- Quick Action Buttons (hidden) -->
+<div class="hidden items-center gap-2">
+<button id="dbViewBtn" onclick="toggleDatabaseModal(true)"
+class="px-3.5 py-2 text-xs md:text-sm font-medium rounded-lg
+bg-orange-100/80 hover:bg-orange-200/80 text-orange-950 transition-all
+flex items-center gap-2 border border-orange-300 shadow-sm">
+<i class="fa-solid fa-database text-orange-600"></i>
+<span>View Database (<span
+id="userCountBadge">0</span>)</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Container -->
+<main class="flex-1 flex items-center justify-center p-4 py-10
+relative">
+<!-- Background subtle glowing warm orbs -->
+<div class="absolute -top-10 left-1/4 w-72 h-72 bg-orange-300/30
+rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute bottom-10 right-1/4 w-80 h-80 bg-amber-200/40
+rounded-full blur-3xl pointer-events-none"></div>
+<!-- Container Card (Max width 480px for auth, expands for
+dashboard) -->
+<div id="mainAppCard" class="w-full max-w-md mx-auto
+transition-all duration-300">
+<!-- ==================== AUTH VIEW (LOGIN / REGISTER)
+==================== -->
+<div id="authSection" class="glass-card rounded-2xl p-6 md:p-8
+relative">
+<!-- Toggle Tabs: Login vs Register -->
+<div class="grid grid-cols-2 p-1 bg-orange-100/70 rounded-xl
+border border-orange-200/80 mb-6">
+<button id="tabLogin" onclick="switchAuthMode('login')"
+class="py-2.5 text-sm font-semibold rounded-lg transition-all
+duration-200 bg-orange-500 text-white shadow-md">
+<i class="fa-solid fa-right-to-bracket mr-1.5"></i> Log In
+</button>
+<button id="tabRegister"
+onclick="switchAuthMode('register')" class="py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 text-slate-600
+hover:text-orange-700">
+<i class="fa-solid fa-user-plus mr-1.5"></i> Register
+</button>
+</div>
+<!-- Notification Message Box (replaces alerts) -->
+<div id="authAlert" class="hidden mb-4 p-3.5 rounded-xl
+text-sm flex items-start gap-2.5 border transition-all">
+<i id="authAlertIcon" class="mt-0.5 text-base"></i>
+<span id="authAlertMsg" class="flex-1 text-xs
+md:text-sm"></span>
+<button onclick="dismissAlert('authAlert')" class="text-xs
+opacity-75 hover:opacity-100"><i class="fa-solid
+fa-xmark"></i></button>
+</div>
+<!-- LOGIN FORM -->
+<form id="loginForm" onsubmit="handleLogin(event)"
+class="fade-enter space-y-4">
+<div class="text-left mb-5">
+<h2 class="text-xl font-bold text-slate-900">Welcome
+Back</h2>
+<p class="text-xs text-slate-500 mt-1">Enter your
+registered email and password to access your dashboard.</p>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700
+uppercase tracking-wider mb-1.5">Email Address</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center
+pl-3.5 text-orange-400 pointer-events-none">
+<i class="fa-solid fa-envelope text-sm"></i>
+</span>
+<input type="email" id="loginEmail" required
+placeholder="you@example.com" class="glass-input w-full pl-10 pr-4
+py-2.5 text-sm rounded-xl placeholder-slate-400" autocomplete="email">
+</div>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700
+uppercase tracking-wider mb-1.5">Password</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center
+pl-3.5 text-orange-400 pointer-events-none">
+<i class="fa-solid fa-lock text-sm"></i> </span>
+<input type="password" id="loginPassword" required
+placeholder="••••••••" class="glass-input w-full pl-10 pr-10 py-2.5
+text-sm rounded-xl placeholder-slate-400"
+autocomplete="current-password">
+<button type="button"
+onclick="togglePasswordVisibility('loginPassword', 'eyeIconLogin')"
+class="absolute inset-y-0 right-0 flex items-center pr-3.5
+text-slate-400 hover:text-orange-600">
+<i id="eyeIconLogin" class="fa-regular fa-eye
+text-sm"></i>
+</button>
+</div>
+</div>
+<button type="submit" class="w-full py-3 px-4
+bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600
+hover:to-amber-600 text-white font-semibold rounded-xl text-sm
+transition-all duration-200 shadow-lg shadow-orange-500/30
+active:scale-[0.99] flex items-center justify-center gap-2 mt-2">
+<i class="fa-solid fa-right-to-bracket"></i>
+<span>Log In to Account</span>
+</button>
+<p class="text-center text-xs text-slate-500 pt-2">
+Need an account?
+<a href="javascript:void(0)"
+onclick="switchAuthMode('register')" class="text-orange-600
+hover:text-orange-700 font-semibold underline
+underline-offset-2">Create one now</a>
+</p>
+</form>
+<!-- REGISTER FORM -->
+<form id="registerForm" onsubmit="handleRegister(event)"
+class="fade-enter space-y-4 hidden">
+<div class="text-left mb-4">
+<h2 class="text-xl font-bold text-slate-900">Create an
+Account</h2>
+<p class="text-xs text-slate-500 mt-1">Fill in the
+required information to register a new user profile.</p>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700
+uppercase tracking-wider mb-1.5">Full Name</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-orange-400 pointer-events-none">
+<i class="fa-solid fa-user text-sm"></i>
+</span>
+<input type="text" id="regFullName" required
+placeholder="e.g. Alex Johnson" class="glass-input w-full pl-10 pr-4
+py-2.5 text-sm rounded-xl placeholder-slate-400">
+</div>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700
+uppercase tracking-wider mb-1.5">Email Address</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center
+pl-3.5 text-orange-400 pointer-events-none">
+<i class="fa-solid fa-envelope text-sm"></i>
+</span>
+<input type="email" id="regEmail" required
+placeholder="name@domain.com" class="glass-input w-full pl-10 pr-4
+py-2.5 text-sm rounded-xl placeholder-slate-400">
+</div>
+<p class="text-[11px] text-slate-500 mt-1 flex
+items-center gap-1">
+<i class="fa-solid fa-circle-info text-[10px]
+text-orange-500"></i> Must be unique; duplicate emails will be
+rejected.
+</p>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700
+uppercase tracking-wider mb-1.5">Password</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center
+pl-3.5 text-orange-400 pointer-events-none">
+<i class="fa-solid fa-lock text-sm"></i>
+</span>
+<input type="password" id="regPassword" required
+minlength="4" placeholder="Minimum 4 characters" class="glass-input
+w-full pl-10 pr-10 py-2.5 text-sm rounded-xl placeholder-slate-400">
+<button type="button"
+onclick="togglePasswordVisibility('regPassword', 'eyeIconReg')"
+class="absolute inset-y-0 right-0 flex items-center pr-3.5
+text-slate-400 hover:text-orange-600">
+<i id="eyeIconReg" class="fa-regular fa-eye
+text-sm"></i>
+</button>
+</div> </div>
+<div>
+<label class="block text-xs font-semibold text-slate-700
+uppercase tracking-wider mb-1.5">Confirm Password</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center
+pl-3.5 text-orange-400 pointer-events-none">
+<i class="fa-solid fa-shield-check text-sm"></i>
+</span>
+<input type="password" id="regConfirmPassword" required
+minlength="4" placeholder="Re-type password" class="glass-input w-full
+pl-10 pr-4 py-2.5 text-sm rounded-xl placeholder-slate-400">
+</div>
+</div>
+<button type="submit" class="w-full py-3 px-4
+bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600
+hover:to-amber-700 text-white font-semibold rounded-xl text-sm
+transition-all duration-200 shadow-lg shadow-orange-500/30
+active:scale-[0.99] flex items-center justify-center gap-2 mt-2">
+<i class="fa-solid fa-user-check"></i>
+<span>Complete Registration</span>
+</button>
+<p class="text-center text-xs text-slate-500 pt-2">
+Already registered?
+<a href="javascript:void(0)"
+onclick="switchAuthMode('login')" class="text-orange-600
+hover:text-orange-700 font-semibold underline underline-offset-2">Log
+in here</a>
+</p>
+</form>
+</div>
+<!-- ==================== DASHBOARD VIEW (AFTER LOGIN)
+==================== -->
+<div id="dashboardSection" class="hidden glass-card rounded-2xl
+p-6 md:p-8 fade-enter max-w-xl mx-auto">
+<!-- User Top Profile Header -->
+<div class="flex items-center justify-between pb-6 border-b
+border-orange-200/70">
+<div class="flex items-center gap-3.5">
+<div id="userAvatar" class="w-14 h-14 rounded-2xl
+bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center
+justify-center text-xl font-bold text-white shadow-md uppercase">
+US </div>
+<div>
+<span class="inline-flex items-center gap-1.5 px-2.5
+py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100
+text-emerald-800 border border-emerald-300">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600
+animate-pulse"></span>
+Active Session
+</span>
+<h2 id="dashUserName" class="text-xl font-bold
+text-slate-900 mt-1">User Name</h2>
+<p id="dashUserEmail" class="text-xs text-slate-500
+font-mono">user@example.com</p>
+</div>
+</div>
+<button onclick="handleLogout()" class="px-4 py-2 rounded-xl
+bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-semibold
+border border-rose-300 transition-all flex items-center gap-2">
+<i class="fa-solid fa-arrow-right-from-bracket"></i>
+<span>Logout</span>
+</button>
+</div>
+<!-- Dashboard Content Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+<!-- Card 1: User Database Record -->
+<div class="p-4 rounded-xl bg-orange-50/80 border
+border-orange-200/80 space-y-2">
+<div class="text-xs font-semibold text-orange-700 flex
+items-center gap-1.5">
+<i class="fa-solid fa-id-badge"></i> System Record
+</div>
+<div class="text-xs text-slate-700 space-y-1 pt-1">
+<div><strong class="text-slate-500">User ID:</strong>
+<span id="dashUserId" class="font-mono text-orange-700
+font-semibold">#1</span></div>
+<div><strong class="text-slate-500">Registered:</strong>
+<span id="dashCreatedAt" class="text-slate-800">-</span></div>
+<div><strong class="text-slate-500">Status:</strong>
+<span class="text-emerald-700 font-medium">Verified &
+Authenticated</span></div>
+</div>
+</div>
+<!-- Card 2: Security & Password Hash -->
+<div class="p-4 rounded-xl bg-orange-50/80 border border-orange-200/80 space-y-2">
+<div class="text-xs font-semibold text-amber-700 flex
+items-center gap-1.5">
+<i class="fa-solid fa-lock"></i> Protected Hash
+(SHA-256)
+</div>
+<div class="text-[11px] text-slate-600 break-all font-mono
+bg-white p-2 rounded-lg border border-orange-200"
+id="dashPasswordHash">
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+</div>
+<p class="text-[10px] text-slate-500">Section 5
+Compliance: Passwords are encrypted before storage.</p>
+</div>
+</div>
+<!-- Update Profile / Database Section -->
+<div class="mt-5 p-4 rounded-xl bg-white border
+border-orange-200 shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-xs font-bold text-slate-800 flex
+items-center gap-1.5">
+<i class="fa-solid fa-user-pen text-orange-500"></i>
+Update Account Profile
+</h3>
+<span class="text-[10px] bg-orange-100 text-orange-800
+font-medium px-2 py-0.5 rounded-full">Secure Sync</span>
+</div>
+<form id="updateProfileForm"
+onsubmit="handleUpdateProfile(event)" class="space-y-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div>
+<label class="block text-[11px] font-semibold
+text-slate-600 mb-1">Update Full Name</label>
+<input type="text" id="updateFullName" required
+class="glass-input w-full px-3 py-2 text-xs rounded-lg"
+placeholder="New Full Name">
+</div>
+<div>
+<label class="block text-[11px] font-semibold
+text-slate-600 mb-1">New Password (optional)</label>
+<input type="password" id="updatePassword"
+minlength="4" class="glass-input w-full px-3 py-2 text-xs rounded-lg"
+placeholder="Leave blank to keep same">
+</div> </div>
+<div class="flex items-center justify-between pt-1">
+<span id="updateSuccessMsg" class="text-[11px]
+text-emerald-600 font-medium hidden flex items-center gap-1">
+<i class="fa-solid fa-circle-check"></i> Account
+details updated successfully!
+</span>
+<button type="submit" class="ml-auto px-4 py-2
+bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600
+hover:to-amber-600 text-white rounded-lg text-xs font-semibold
+shadow-sm transition-all flex items-center gap-1.5">
+<i class="fa-solid fa-floppy-disk"></i> Save Changes
+</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer with Project Credits -->
+<footer class="w-full border-t border-orange-200/70 bg-white/70 py-4
+px-4 text-center text-xs text-slate-500">
+<div class="max-w-6xl mx-auto flex flex-col sm:flex-row
+items-center justify-between gap-2">
+<div>
+<strong class="text-slate-800">Login and Registration
+System</strong>
+</div>
+<div>
+<span class="text-slate-500">Secure Authentication & Database
+Portal</span>
+</div>
+</div>
+</footer>
+<!-- ==================== JAVASCRIPT LOGIC ==================== -->
+<script>
+/**
+* In-Memory Database Simulator for Project 11
+* Exactly matches the table specification in Section 5:
+* - user_id (unique integer)
+* - full_name (string)
+* - email (unique string)
+* - password_hash (protected version of password) * - created_at (timestamp)
+*/
+class Database {
+constructor() {
+this.users = [];
+this.nextId = 1;
+this.currentSessionUser = null;
+}
+// Find user by email
+findByEmail(email) {
+return this.users.find(u => u.email.toLowerCase() ===
+email.toLowerCase());
+}
+// Find user by id
+findById(id) {
+return this.users.find(u => u.user_id === id);
+}
+// Insert new user
+insertUser(fullName, email, passwordHash) {
+if (this.findByEmail(email)) {
+return { success: false, message: "This email address is
+already registered." };
+}
+const newUser = {
+user_id: this.nextId++,
+full_name: fullName.trim(),
+email: email.trim().toLowerCase(),
+password_hash: passwordHash,
+created_at: new Date().toLocaleString()
+};
+this.users.push(newUser);
+return { success: true, user: newUser };
+}
+// Update existing user details in database
+updateUser(id, newFullName, newPasswordHash = null) {
+const user = this.findById(id);
+if (!user) {
+return { success: false, message: "User record not found in
+database." };
+}
+if (newFullName) { user.full_name = newFullName.trim();
+}
+if (newPasswordHash) {
+user.password_hash = newPasswordHash;
+}
+return { success: true, user: user };
+}
+// Check login
+authenticate(email, passwordHash) {
+const user = this.findByEmail(email);
+if (!user) {
+return { success: false, message: "No account found with
+this email address." };
+}
+if (user.password_hash !== passwordHash) {
+return { success: false, message: "Incorrect password.
+Please try again." };
+}
+return { success: true, user: user };
+}
+}
+// Initialize Database
+const db = new Database();
+/**
+* Cryptographic Hashing utility using Web Crypto API (SHA-256)
+* Meets Section 5 requirement: "Passwords should not be saved as
+normal readable text."
+*/
+async function hashPassword(password) {
+const msgUint8 = new TextEncoder().encode(password);
+const hashBuffer = await crypto.subtle.digest('SHA-256',
+msgUint8);
+const hashArray = Array.from(new Uint8Array(hashBuffer));
+const hashHex = hashArray.map(b => b.toString(16).padStart(2,
+'0')).join('');
+return hashHex;
+}
+/**
+* Switch between Login and Registration tabs
+*/
+function switchAuthMode(mode) {
+hideAlert('authAlert');
+const tabLogin = document.getElementById('tabLogin'); const tabRegister = document.getElementById('tabRegister');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+if (mode === 'login') {
+tabLogin.className = "py-2.5 text-sm font-semibold rounded-lg
+transition-all duration-200 bg-orange-500 text-white shadow-md";
+tabRegister.className = "py-2.5 text-sm font-semibold
+rounded-lg transition-all duration-200 text-slate-600
+hover:text-orange-700";
+loginForm.classList.remove('hidden');
+registerForm.classList.add('hidden');
+} else {
+tabRegister.className = "py-2.5 text-sm font-semibold
+rounded-lg transition-all duration-200 bg-orange-500 text-white
+shadow-md";
+tabLogin.className = "py-2.5 text-sm font-semibold rounded-lg
+transition-all duration-200 text-slate-600 hover:text-orange-700";
+registerForm.classList.remove('hidden');
+loginForm.classList.add('hidden');
+}
+}
+/**
+* Toggle password visibility
+*/
+function togglePasswordVisibility(inputId, iconId) {
+const input = document.getElementById(inputId);
+const icon = document.getElementById(iconId);
+if (input.type === 'password') {
+input.type = 'text';
+icon.classList.remove('fa-eye');
+icon.classList.add('fa-eye-slash');
+} else {
+input.type = 'password';
+icon.classList.remove('fa-eye-slash');
+icon.classList.add('fa-eye');
+}
+}
+/**
+* Show custom feedback alert (Never uses window.alert)
+*/
+function showAlert(boxId, message, type = 'error') {
+const alertBox = document.getElementById(boxId);
+const alertMsg = document.getElementById(boxId + 'Msg');
+const alertIcon = document.getElementById(boxId + 'Icon'); alertMsg.textContent = message;
+alertBox.classList.remove('hidden', 'bg-rose-100',
+'border-rose-300', 'text-rose-800', 'bg-emerald-100',
+'border-emerald-300', 'text-emerald-800');
+if (type === 'error') {
+alertBox.classList.add('bg-rose-100', 'border-rose-300',
+'text-rose-800');
+alertIcon.classNam= 'fa-solid fa-circle-check
+text-emerald-600';
+}
+}
+function hideAlert(boxId) {
+document.getElementById(boxId).classList.add('hidden');
+}
+function dismissAlert(boxId) {
+hideAlert(boxId);
+}
+/**
+* Registration Handler (Section 6)
+*/
+async function handleRegister(event) {
+event.preventDefault();
+hideAlert('authAlert');
+const fullName =
+document.getElementById('regFullName').value.trim();
+const email = document.getElementById('regEmail').value.trim();
+const password = document.getElementById('regPassword').value;
+const confirmPassword =
+document.getElementById('regConfirmPassword').value;
+// 1. Check required fields
+if (!fullName || !email || !password || !confirmPassword) {
+showAlert('authAlert', 'Please fill in all the required
+fields.', 'error');
+return;
+}
+// 2. Validate passwords match if (password !== confirmPassword) {
+showAlert('authAlert', 'Passwords do not match. Please
+re-enter them.', 'error');
+return;
+}
+// 3. Password length check
+if (password.length < 4) {
+showAlert('authAlert', 'Password must be at least 4 characters
+long.', 'error');
+return;
+}
+// 4. Hash the password
+const passwordHash = await hashPassword(password);
+// 5. Insert into Database
+const result = db.insertUser(fullName, email, passwordHash);
+if (!result.success) {
+showAlert('authAlert', result.message, 'error');
+return;
+}
+// Update UI counts
+updateDatabaseView();
+// Show success message and auto switch to login
+showAlert('authAlert', `Registration complete for ${fullName}!
+Please log in.`, 'success');
+document.getElementById('registerForm').reset();
+setTimeout(() => {
+switchAuthMode('login');
+document.getElementById('loginEmail').value = email;
+}, 1200);
+}
+/**
+* Login Handler (Section 7)
+*/
+async function handleLogin(event) {
+event.preventDefault();
+hideAlert('authAlert');
+const email =
+document.getElementById('loginEmail').value.trim();
+const password = document.getElementById('loginPassword').value; if (!email || !password) {
+showAlert('authAlert', 'Please enter both your email and
+password.', 'error');
+return;
+}
+// Hash entered password to compare with database
+const passwordHash = await hashPassword(password);
+const authResult = db.authenticate(email, passwordHash);
+if (!authResult.success) {
+showAlert('authAlert', authResult.message, 'error');
+return;
+}
+// Login Successful: Open Home Page (Dashboard)
+db.currentSessionUser = authResult.user;
+renderDashboard(authResult.user);
+}
+/**
+* Render Dashboard / Home Page (Section 4 & 7)
+*/
+function renderDashboard(user) {
+document.getElementById('authSection').classList.add('hidden');
+const dash = document.getElementById('dashboardSection');
+dash.classList.remove('hidden');
+// Populate user info
+document.getElementById('dashUserName').textContent =
+user.full_name;
+document.getElementById('dashUserEmail').textContent =
+user.email;
+document.getElementById('dashUserId').textContent =
+`#${user.user_id}`;
+document.getElementById('dashCreatedAt').textContent =
+user.created_at;
+document.getElementById('dashPasswordHash').textContent =
+user.password_hash;
+// Fill in update form pre-values
+document.getElementById('updateFullName').value =
+user.full_name;
+document.getElementById('updatePassword').value = '';
+// Initials avatar
+const initials = user.full_name .split(' ')
+.map(n => n[0])
+.join('')
+.substring(0, 2)
+.toUpperCase();
+document.getElementById('userAvatar').textContent = initials ||
+'US';
+}
+/**
+* Handle Update Profile (Updates existing Database record)
+*/
+async function handleUpdateProfile(event) {
+event.preventDefault();
+if (!db.currentSessionUser) return;
+const newFullName =
+document.getElementById('updateFullName').value.trim();
+const newPassword =
+document.getElementById('updatePassword').value;
+let newPasswordHash = null;
+if (newPassword) {
+if (newPassword.length < 4) {
+showAlert('authAlert', 'New password must be at least 4
+characters.', 'error');
+return;
+}
+newPasswordHash = await hashPassword(newPassword);
+}
+// Update in database
+const updateResult =
+db.updateUser(db.currentSessionUser.user_id, newFullName,
+newPasswordHash);
+if (updateResult.success) {
+db.currentSessionUser = updateResult.user;
+renderDashboard(updateResult.user);
+updateDatabaseView();
+const successMsg =
+document.getElementById('updateSuccessMsg');
+successMsg.classList.remove('hidden');
+setTimeout(() => {
+successMsg.classList.add('hidden');
+}, 3000);
+} }
+/**
+* Logout Handler (Section 8)
+*/
+function handleLogout() {
+db.currentSessionUser = null;
+document.getElementById('dashboardSection').classList.add('hidden');
+document.getElementById('authSection').classList.remove('hidden');
+// Clear login inputs
+document.getElementById('loginPassword').value = '';
+showAlert('authAlert', 'You have been successfully logged out.',
+'success');
+}
+// Helper to sanitize html
+function escapeHtml(str) {
+const div = document.createElement('div');
+div.textContent = str;
+return div.innerHTML;
+}
+// Quick seed demo user for testing
+async function seedSampleData() {
+const demoUsers = [
+{ name: "Demo User", email: "user@example.com", pass:
+"demo123" }
+];
+for (const u of demoUsers) {
+if (!db.findByEmail(u.email)) {
+const hash = await hashPassword(u.pass);
+db.insertUser(u.name, u.email, hash);
+}
+}
+}
+// Pre-populate with demo account ready to test immediately
+window.onload = async function() {
+await seedSampleData();
+};
+</script>
+</body>
+</html>
