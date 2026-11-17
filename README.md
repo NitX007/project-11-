@@ -20,9 +20,8 @@ A console-based user authentication and account management system built in C++ u
 - **Brute-Force Protection:** Limits login to 3 failed attempts
 - **Account Management:** View profile details (username & email), change password, and delete account
 
-## How to Compile and Run
-
-1. Clone the repository:
-   ```bash
-   git clone <your-repository-url>
-   cd <your-repository-folder>
+ ### Version 3.0 (Current)
+- **Role-Based Access Control (RBAC):** Supports separate `USER` and `ADMIN` roles with dedicated dashboards
+- **Forgot Password Recovery:** Allows users to reset forgotten passwords by verifying a hashed security question answer
+- **Audit Logging:** Automatically records timestamped login, registration, failed attempt, and password change events in `activity.log`
+- **Admin Controls:** Admins can view all registered users and inspect system activity logs
